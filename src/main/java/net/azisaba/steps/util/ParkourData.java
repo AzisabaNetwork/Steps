@@ -40,8 +40,6 @@ public class ParkourData {
       instance.enableAutoChunkLoad(true);
       instance.setChunkGenerator(VoidParkourWorldGenerator.GENERATOR);
       instance.setTimeRate(0);
-
-      player.setInstance(instance);
     }
     if (blockGenerator != null) {
       blockGenerator.reset();
@@ -60,16 +58,20 @@ public class ParkourData {
       player.setGameMode(GameMode.SURVIVAL);
     }
 
-    LightEngine engine = new LightEngine();
-    engine.recalculateInstance(instance);
+    MinecraftServer.getSchedulerManager().scheduleNextTick(() -> {
+      LightEngine engine = new LightEngine();
+      engine.recalculateInstance(instance);
+    });
 
-    try {
-      for (int i = 0; i < 10; i++) {
-        blockGenerator.generateForward();
+    MinecraftServer.getSchedulerManager().buildTask(() -> {
+      try {
+        for (int i = 0; i < 10; i++) {
+          blockGenerator.generateForward();
+        }
+      } catch (NoSuchAlgorithmException e) {
+        e.printStackTrace();
       }
-    } catch (NoSuchAlgorithmException e) {
-      e.printStackTrace();
-    }
+    }).delay(Duration.ofMillis(100)).schedule();
   }
 
   public void markAsDied() {
@@ -90,7 +92,7 @@ public class ParkourData {
         return;
       }
 
-      initPlayer();
+      MinecraftServer.getSchedulerManager().scheduleNextTick(this::initPlayer);
     }).delay(Duration.ofSeconds(5)).schedule();
   }
 

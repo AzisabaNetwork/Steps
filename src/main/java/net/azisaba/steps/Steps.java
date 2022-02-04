@@ -66,6 +66,7 @@ public class Steps {
 
       ParkourData data = new ParkourData(player);
       data.initPlayer();
+      player.setInstance(data.getInstance());
       event.setSpawningInstance(data.getInstance());
       dataMap.put(player.getUuid(), data);
 
