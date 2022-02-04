@@ -34,39 +34,45 @@ public class ForwardBlockGenerator {
     if (posSet.isEmpty()) {
       Pos first = new Pos(11, 4, 8);
       posSet.add(first);
-      instance.setBlock(first.blockX(), first.blockY(), first.blockZ(), getRandomBlock());
+      instance.loadChunk(first).thenAccept((chunk) ->
+          instance.setBlock(first.blockX(), first.blockY(), first.blockZ(), getRandomBlock())
+      );
     }
     Pos pos = posSet.first();
     Vec from = pos.asVec();
 
     Vec move = null;
     while (move == null || move.length() >= 4) {
-      move = getNextVec(from);
+      move = getNextVec();
 
       Vec added = from.add(move);
       if (added.y() < 0 || added.y() > 100) {
         move = null;
       }
-      if (added.chunkZ() != 0) {
+      if (added.z() < 1 || 15 <= added.z()) {
         move = null;
       }
     }
 
     Vec next = from.add(move);
-    if (!instance.isChunkLoaded(next)) {
-      instance.loadChunk(next);
+
+    instance.loadChunk(next).thenAccept((chunk) -> {
       engine.recalculateInstance(instance);
-    }
-    instance.setBlock(next.blockX(), next.blockY(), next.blockZ(), getRandomBlock());
+      instance.setBlock(next.blockX(), next.blockY(), next.blockZ(), getRandomBlock());
+    });
     posSet.add(next.asPosition());
   }
 
   public void reset() {
-    posSet.forEach(pos -> instance.setBlock(pos.blockX(), pos.blockY(), pos.blockZ(), Block.AIR));
+    posSet.forEach(pos -> {
+      if (instance.isChunkLoaded(pos)) {
+        instance.setBlock(pos, Block.AIR);
+      }
+    });
     posSet.clear();
   }
 
-  private Vec getNextVec(Vec from) throws NoSuchAlgorithmException {
+  private Vec getNextVec() throws NoSuchAlgorithmException {
     if (random == null) {
       random = SecureRandom.getInstance("SHA1PRNG");
     }

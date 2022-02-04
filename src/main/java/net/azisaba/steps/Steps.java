@@ -67,8 +67,8 @@ public class Steps {
 
       ParkourData data = new ParkourData(player);
       data.initPlayer();
-      player.setInstance(data.getInstance());
       event.setSpawningInstance(data.getInstance());
+
       dataMap.put(player.getUuid(), data);
 
       MinecraftServer.getSchedulerManager()
@@ -93,10 +93,13 @@ public class Steps {
           .forEach(
               (pos) -> {
                 Instance instance = p.getInstance();
-                if (instance.getBlock(pos.blockX(), pos.blockY(), pos.blockZ()) == Block.STONE) {
+                if (!instance.isChunkLoaded(pos)) {
                   return;
                 }
-                instance.setBlock(pos.blockX(), pos.blockY(), pos.blockZ(), Block.AIR);
+                if (instance.getBlock(pos) == Block.STONE) {
+                  return;
+                }
+                instance.setBlock(pos, Block.AIR);
                 instance.playSound(
                     Sound.sound(SoundEvent.BLOCK_STONE_BREAK, Source.BLOCK, 1f, 1f),
                     pos.blockX(), pos.blockY(), pos.blockZ());
