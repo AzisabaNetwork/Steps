@@ -37,7 +37,6 @@ public class ParkourData {
     died = false;
     if (instance == null) {
       instance = MinecraftServer.getInstanceManager().createInstanceContainer();
-      instance.enableAutoChunkLoad(true);
       instance.setChunkGenerator(VoidParkourWorldGenerator.GENERATOR);
       instance.setTimeRate(0);
     }
@@ -54,7 +53,7 @@ public class ParkourData {
       if (c == null || !c.isLoaded()) {
         instance.loadChunk(start);
       }
-      player.teleport(start);
+      TeleportUtils.teleport(player, start);
       player.setGameMode(GameMode.SURVIVAL);
     }
 

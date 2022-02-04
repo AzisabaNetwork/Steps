@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.azisaba.steps.util.ForwardBlockGenerator;
 import net.azisaba.steps.util.ParkourData;
+import net.azisaba.steps.util.TeleportUtils;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.sound.Sound.Source;
 import net.kyori.adventure.text.Component;
@@ -71,7 +72,7 @@ public class Steps {
       dataMap.put(player.getUuid(), data);
 
       MinecraftServer.getSchedulerManager()
-          .scheduleNextTick(() -> player.teleport(new Pos(5, 5, 8, -90, 0)));
+          .scheduleNextTick(() -> TeleportUtils.teleport(player, new Pos(5, 5, 8, -90, 0)));
     });
 
     eventHandler.addListener(PlayerMoveEvent.class, event -> {
@@ -146,9 +147,6 @@ public class Steps {
     eventHandler.addListener(PlayerChunkUnloadEvent.class, (event) -> {
       Instance instance = event.getPlayer().getInstance();
       if (instance == null) {
-        return;
-      }
-      if (event.getChunkX() >= 0 && event.getChunkZ() == 0) {
         return;
       }
       Chunk chunk = instance.getChunk(event.getChunkX(), event.getChunkZ());
