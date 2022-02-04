@@ -16,6 +16,7 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
+import net.minestom.server.instance.Chunk;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.sound.SoundEvent;
 
@@ -51,6 +52,10 @@ public class ParkourData {
     Pos start = new Pos(5, 5, 8, -90, 0);
     player.setRespawnPoint(new Pos(5, 5, 8, -90, 0));
     if (player.getInstance() != null) {
+      Chunk c = instance.getChunkAt(start.x(), start.z());
+      if (c == null || !c.isLoaded()) {
+        instance.loadChunk(start);
+      }
       player.teleport(start);
       player.setGameMode(GameMode.SURVIVAL);
     }

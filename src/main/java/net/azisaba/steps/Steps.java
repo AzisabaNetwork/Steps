@@ -19,10 +19,12 @@ import net.minestom.server.event.entity.EntityDamageEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerBlockPlaceEvent;
 import net.minestom.server.event.player.PlayerChatEvent;
+import net.minestom.server.event.player.PlayerChunkUnloadEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerLoginEvent;
 import net.minestom.server.event.player.PlayerMoveEvent;
 import net.minestom.server.extras.bungee.BungeeCordProxy;
+import net.minestom.server.instance.Chunk;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.sound.SoundEvent;
@@ -123,11 +125,34 @@ public class Steps {
     eventHandler.addListener(PlayerDisconnectEvent.class, (event) -> {
       Player p = event.getPlayer();
       dataMap.remove(p.getUuid());
+
+      Instance instance = p.getInstance();
+      if (instance == null) {
+        return;
+      }
+
+      MinecraftServer.getSchedulerManager().scheduleNextProcess(
+          () -> MinecraftServer.getInstanceManager().unregisterInstance(instance)
+      );
     });
 
     eventHandler.addListener(EntityDamageEvent.class, (event) -> {
       if (event.getEntity() instanceof Player) {
         event.setCancelled(true);
+      }
+    });
+
+    eventHandler.addListener(PlayerChunkUnloadEvent.class, (event) -> {
+      Instance instance = event.getPlayer().getInstance();
+      if (instance == null) {
+        return;
+      }
+      if (event.getChunkX() >= 0 && event.getChunkZ() == 0) {
+        return;
+      }
+      Chunk chunk = instance.getChunk(event.getChunkX(), event.getChunkZ());
+      if (chunk != null && chunk.isLoaded()) {
+        instance.unloadChunk(event.getChunkX(), event.getChunkZ());
       }
     });
 
