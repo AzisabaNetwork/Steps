@@ -39,6 +39,8 @@ public class ParkourData {
       instance = MinecraftServer.getInstanceManager().createInstanceContainer();
       instance.setChunkGenerator(VoidParkourWorldGenerator.GENERATOR);
       instance.setTimeRate(0);
+      instance.enableAutoChunkLoad(false);
+      instance.loadChunk(0, 0);
     }
     if (blockGenerator != null) {
       blockGenerator.reset();
