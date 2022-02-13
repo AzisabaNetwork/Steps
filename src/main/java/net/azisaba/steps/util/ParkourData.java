@@ -39,7 +39,7 @@ public class ParkourData {
       instance.setChunkGenerator(VoidParkourWorldGenerator.GENERATOR);
       instance.setTimeRate(0);
       instance.enableAutoChunkLoad(false);
-      instance.loadChunk(0, 0);
+      instance.loadChunk(0, 0).join();
     }
     if (blockGenerator != null) {
       blockGenerator.reset();
