@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.TreeSet;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import net.azisaba.steps.light.LightEngine;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
@@ -17,6 +18,8 @@ import net.minestom.server.instance.block.Block;
 public class ForwardBlockGenerator {
 
   private final Instance instance;
+
+  private final LightEngine engine = new LightEngine();
 
   @Getter
   private final TreeSet<Pos> posSet = new TreeSet<>(
@@ -31,7 +34,9 @@ public class ForwardBlockGenerator {
     if (posSet.isEmpty()) {
       Pos first = new Pos(11, 4, 8);
       posSet.add(first);
-      instance.setBlock(first.blockX(), first.blockY(), first.blockZ(), getRandomBlock());
+      instance.loadChunk(first).thenAccept((chunk) ->
+          instance.setBlock(first.blockX(), first.blockY(), first.blockZ(), getRandomBlock())
+      );
     }
     Pos pos = posSet.first();
     Vec from = pos.asVec();
@@ -44,19 +49,30 @@ public class ForwardBlockGenerator {
       if (added.y() < 0 || added.y() > 100) {
         move = null;
       }
+      if (added.z() < 1 || 15 <= added.z()) {
+        move = null;
+      }
     }
 
     Vec next = from.add(move);
-    instance.setBlock(next.blockX(), next.blockY(), next.blockZ(), getRandomBlock());
+
+    instance.loadChunk(next).thenAccept((chunk) -> {
+      engine.recalculateInstance(instance);
+      instance.setBlock(next.blockX(), next.blockY(), next.blockZ(), getRandomBlock());
+    });
     posSet.add(next.asPosition());
   }
 
   public void reset() {
-    posSet.forEach(pos -> instance.setBlock(pos.blockX(), pos.blockY(), pos.blockZ(), Block.AIR));
+    posSet.forEach(pos -> {
+      if (instance.isChunkLoaded(pos)) {
+        instance.setBlock(pos, Block.AIR);
+      }
+    });
     posSet.clear();
   }
 
-  private Vec getNextVec(Vec from) throws NoSuchAlgorithmException {
+  private Vec getNextVec() throws NoSuchAlgorithmException {
     if (random == null) {
       random = SecureRandom.getInstance("SHA1PRNG");
     }

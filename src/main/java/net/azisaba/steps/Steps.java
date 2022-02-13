@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.azisaba.steps.util.ForwardBlockGenerator;
 import net.azisaba.steps.util.ParkourData;
+import net.azisaba.steps.util.TeleportUtils;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.sound.Sound.Source;
 import net.kyori.adventure.text.Component;
@@ -19,10 +20,12 @@ import net.minestom.server.event.entity.EntityDamageEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerBlockPlaceEvent;
 import net.minestom.server.event.player.PlayerChatEvent;
+import net.minestom.server.event.player.PlayerChunkUnloadEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerLoginEvent;
 import net.minestom.server.event.player.PlayerMoveEvent;
 import net.minestom.server.extras.bungee.BungeeCordProxy;
+import net.minestom.server.instance.Chunk;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.sound.SoundEvent;
@@ -65,10 +68,11 @@ public class Steps {
       ParkourData data = new ParkourData(player);
       data.initPlayer();
       event.setSpawningInstance(data.getInstance());
+
       dataMap.put(player.getUuid(), data);
 
       MinecraftServer.getSchedulerManager()
-          .scheduleNextTick(() -> player.teleport(new Pos(5, 5, 8, -90, 0)));
+          .scheduleNextTick(() -> TeleportUtils.teleport(player, new Pos(5, 5, 8, -90, 0)));
     });
 
     eventHandler.addListener(PlayerMoveEvent.class, event -> {
@@ -89,10 +93,13 @@ public class Steps {
           .forEach(
               (pos) -> {
                 Instance instance = p.getInstance();
-                if (instance.getBlock(pos.blockX(), pos.blockY(), pos.blockZ()) == Block.STONE) {
+                if (!instance.isChunkLoaded(pos)) {
                   return;
                 }
-                instance.setBlock(pos.blockX(), pos.blockY(), pos.blockZ(), Block.AIR);
+                if (instance.getBlock(pos) == Block.STONE) {
+                  return;
+                }
+                instance.setBlock(pos, Block.AIR);
                 instance.playSound(
                     Sound.sound(SoundEvent.BLOCK_STONE_BREAK, Source.BLOCK, 1f, 1f),
                     pos.blockX(), pos.blockY(), pos.blockZ());
@@ -123,11 +130,31 @@ public class Steps {
     eventHandler.addListener(PlayerDisconnectEvent.class, (event) -> {
       Player p = event.getPlayer();
       dataMap.remove(p.getUuid());
+
+      Instance instance = p.getInstance();
+      if (instance == null) {
+        return;
+      }
+
+      MinecraftServer.getSchedulerManager().scheduleNextProcess(
+          () -> MinecraftServer.getInstanceManager().unregisterInstance(instance)
+      );
     });
 
     eventHandler.addListener(EntityDamageEvent.class, (event) -> {
       if (event.getEntity() instanceof Player) {
         event.setCancelled(true);
+      }
+    });
+
+    eventHandler.addListener(PlayerChunkUnloadEvent.class, (event) -> {
+      Instance instance = event.getPlayer().getInstance();
+      if (instance == null) {
+        return;
+      }
+      Chunk chunk = instance.getChunk(event.getChunkX(), event.getChunkZ());
+      if (chunk != null && chunk.isLoaded()) {
+        instance.unloadChunk(event.getChunkX(), event.getChunkZ());
       }
     });
 

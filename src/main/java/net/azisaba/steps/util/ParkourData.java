@@ -36,11 +36,10 @@ public class ParkourData {
     died = false;
     if (instance == null) {
       instance = MinecraftServer.getInstanceManager().createInstanceContainer();
-      instance.enableAutoChunkLoad(true);
       instance.setChunkGenerator(VoidParkourWorldGenerator.GENERATOR);
       instance.setTimeRate(0);
-
-      player.setInstance(instance);
+      instance.enableAutoChunkLoad(false);
+      instance.loadChunk(0, 0);
     }
     if (blockGenerator != null) {
       blockGenerator.reset();
@@ -51,20 +50,24 @@ public class ParkourData {
     Pos start = new Pos(5, 5, 8, -90, 0);
     player.setRespawnPoint(new Pos(5, 5, 8, -90, 0));
     if (player.getInstance() != null) {
-      player.teleport(start);
-      player.setGameMode(GameMode.SURVIVAL);
+      TeleportUtils.teleport(player, start)
+          .thenAccept((unused) -> player.setGameMode(GameMode.SURVIVAL));
     }
 
-    LightEngine engine = new LightEngine();
-    engine.recalculateInstance(instance);
+    MinecraftServer.getSchedulerManager().scheduleNextTick(() -> {
+      LightEngine engine = new LightEngine();
+      engine.recalculateInstance(instance);
+    });
 
-    try {
-      for (int i = 0; i < 10; i++) {
-        blockGenerator.generateForward();
+    MinecraftServer.getSchedulerManager().buildTask(() -> {
+      try {
+        for (int i = 0; i < 10; i++) {
+          blockGenerator.generateForward();
+        }
+      } catch (NoSuchAlgorithmException e) {
+        e.printStackTrace();
       }
-    } catch (NoSuchAlgorithmException e) {
-      e.printStackTrace();
-    }
+    }).delay(Duration.ofMillis(100)).schedule();
   }
 
   public void markAsDied() {
@@ -85,7 +88,7 @@ public class ParkourData {
         return;
       }
 
-      initPlayer();
+      MinecraftServer.getSchedulerManager().scheduleNextTick(this::initPlayer);
     }).delay(Duration.ofSeconds(5)).schedule();
   }
 
