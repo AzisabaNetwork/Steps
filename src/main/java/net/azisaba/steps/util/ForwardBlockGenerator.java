@@ -43,7 +43,7 @@ public class ForwardBlockGenerator {
 
     Vec move = null;
     while (move == null || move.length() >= 5) {
-      move = getNextVec(from);
+      move = getNextVec();
 
       Vec added = from.add(move);
       if (added.y() < 0 || added.y() > 100) {
