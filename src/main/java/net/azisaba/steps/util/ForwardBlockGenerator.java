@@ -42,7 +42,7 @@ public class ForwardBlockGenerator {
     Vec from = pos.asVec();
 
     Vec move = null;
-    while (move == null || move.length() >= 4) {
+    while (move == null || move.length() >= 5) {
       move = getNextVec();
 
       Vec added = from.add(move);
@@ -77,7 +77,7 @@ public class ForwardBlockGenerator {
       random = SecureRandom.getInstance("SHA1PRNG");
     }
 
-    int x = random.nextInt(2) + 2; // 2 to 3
+    int x = random.nextInt(3) + 4; // 4 to 6
     int y = random.nextInt(3) - 1; // -1 to 1
     int z = random.nextInt(3) - 1; // -1 to 1
 
