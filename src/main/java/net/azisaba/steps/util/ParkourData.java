@@ -33,7 +33,7 @@ public class ParkourData {
 
   public void initPlayer() {
     record = 0;
-    died = false;
+    died = true;
     if (instance == null) {
       instance = MinecraftServer.getInstanceManager().createInstanceContainer();
       instance.setChunkGenerator(VoidParkourWorldGenerator.GENERATOR);
@@ -51,7 +51,10 @@ public class ParkourData {
     player.setRespawnPoint(new Pos(5, 5, 8, -90, 0));
     if (player.getInstance() != null) {
       TeleportUtils.teleport(player, start)
-          .thenAccept((unused) -> player.setGameMode(GameMode.SURVIVAL));
+          .thenAccept((unused) -> player.setGameMode(GameMode.SURVIVAL))
+          .thenAccept((unused) -> died = false);
+    } else {
+      died = false;
     }
 
     MinecraftServer.getSchedulerManager().scheduleNextTick(() -> {
