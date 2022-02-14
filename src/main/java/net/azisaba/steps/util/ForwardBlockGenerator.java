@@ -8,6 +8,7 @@ import java.util.TreeSet;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.azisaba.steps.light.LightEngine;
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
@@ -58,7 +59,8 @@ public class ForwardBlockGenerator {
 
     instance.loadChunk(next).thenAccept((chunk) -> {
       engine.recalculateInstance(instance);
-      instance.setBlock(next.blockX(), next.blockY(), next.blockZ(), getRandomBlock());
+      MinecraftServer.getSchedulerManager().scheduleNextTick(
+          () -> instance.setBlock(next.blockX(), next.blockY(), next.blockZ(), getRandomBlock()));
     });
     posSet.add(next.asPosition());
   }
