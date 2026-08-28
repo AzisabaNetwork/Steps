@@ -90,7 +90,7 @@
     <dependency>
       <groupId>com.github.Minestom</groupId>
       <artifactId>Minestom</artifactId>
-      <version>fbd462a6ee</version>
+      <version>2026.08.28-26.2</version>
       <exclusions>
         <exclusion>
           <groupId>org.jboss.shrinkwrap.resolver</groupId>
